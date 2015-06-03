@@ -3,6 +3,7 @@ package de.eva.rmi.chat;
 import java.io.Serializable;
 
 public interface Command extends Serializable {
+	
 	ChatClientService getClient();
 
 	public static abstract class ClientCommand implements Command {

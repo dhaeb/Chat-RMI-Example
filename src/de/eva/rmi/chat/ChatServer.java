@@ -18,8 +18,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatService {
 
 	public static final String CHAT_SERVER = "chat-server";
 
-	private static final long serialVersionUID = 1323539002891588806L;
-
 	private Map<String, ChatClientService> userToClientMapping = new HashMap<>();
 	
 	private ChatServer() throws RemoteException {
@@ -43,8 +41,12 @@ public class ChatServer extends UnicastRemoteObject implements ChatService {
 	}
 
 	@Override
-	public synchronized void register(RegisterCommand c) throws RemoteException {
-		userToClientMapping.put(c.getContent(), c.getClient());
+	public synchronized void register(RegisterCommand c) throws RemoteException, UserAlreadyRegisteredException {
+		String name = c.getContent();
+		if(userToClientMapping.containsKey(name)){
+			throw new UserAlreadyRegisteredException(name);
+		}
+		userToClientMapping.put(name, c.getClient());
 	}
 
 	@Override
