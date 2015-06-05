@@ -1,4 +1,4 @@
-package de.eva.rmi.chat;
+package de.eva.rmi.server;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -9,16 +9,21 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.eva.rmi.chat.Command;
+import de.eva.rmi.chat.Message;
+import de.eva.rmi.chat.UserAlreadyRegisteredException;
 import de.eva.rmi.chat.Command.ContentCommand;
 import de.eva.rmi.chat.Command.ListCommand;
 import de.eva.rmi.chat.Command.RegisterCommand;
 import de.eva.rmi.chat.Command.ToSpecialUserCommand;
+import de.eva.rmi.client.ChatClientService;
 
-public class ChatServer extends UnicastRemoteObject implements ChatService {
+public class ChatServer extends UnicastRemoteObject implements ChatServerService {
 
 	public static final String CHAT_SERVER = "chat-server";
 
 	private Map<String, ChatClientService> userToClientMapping = new HashMap<>();
+	private Map<ChatClientService, String> clientToUserNameMapping = new HashMap<>();
 	
 	private ChatServer() throws RemoteException {
 		super();
@@ -30,14 +35,15 @@ public class ChatServer extends UnicastRemoteObject implements ChatService {
 		if(receiver == null){
 			System.err.println("no receiver found");
 		} else {
-			receiver.receive(c);
+			String userName = clientToUserNameMapping.get(c.getClient());
+			receiver.receive(new Message(userName, c.getContent()));
 		}
 	}
 
 	@Override
 	public synchronized void listCommand(ListCommand l) throws RemoteException {
-		ContentCommand sendable = new ContentCommand(l.getClient(), userToClientMapping.keySet().toString());
-		l.getClient().receive(sendable);
+		String listedClientNames = userToClientMapping.keySet().toString();
+		l.getClient().receive(new Message("server", listedClientNames));
 	}
 
 	@Override
@@ -47,12 +53,13 @@ public class ChatServer extends UnicastRemoteObject implements ChatService {
 			throw new UserAlreadyRegisteredException(name);
 		}
 		userToClientMapping.put(name, c.getClient());
+		clientToUserNameMapping.put(c.getClient(), name);
 	}
 
 	@Override
 	public synchronized void broadcast(ContentCommand m) throws RemoteException {
 		for(ChatClientService c : userToClientMapping.values()){
-			c.receive(m);
+			c.receive(new Message("bc" + clientToUserNameMapping.get(m.getClient()), m.getContent()));
 		}
 	}
 	

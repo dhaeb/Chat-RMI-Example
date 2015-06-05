@@ -2,6 +2,8 @@ package de.eva.rmi.chat;
 
 import java.io.Serializable;
 
+import de.eva.rmi.client.ChatClientService;
+
 public interface Command extends Serializable {
 	
 	ChatClientService getClient();
@@ -34,7 +36,7 @@ public interface Command extends Serializable {
 	public static class ContentCommand extends ClientCommand implements Serializable {
 
 		private static final long serialVersionUID = -1401696986635463460L;
-		String content;
+		private String content;
 
 		public ContentCommand(ChatClientService client, String content) {
 			super(client);

@@ -1,4 +1,4 @@
-package de.eva.rmi.chat;
+package de.eva.rmi.client;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -7,10 +7,15 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 
+import de.eva.rmi.chat.Command;
+import de.eva.rmi.chat.Message;
+import de.eva.rmi.chat.UserAlreadyRegisteredException;
 import de.eva.rmi.chat.Command.ContentCommand;
 import de.eva.rmi.chat.Command.ListCommand;
 import de.eva.rmi.chat.Command.RegisterCommand;
 import de.eva.rmi.chat.Command.ToSpecialUserCommand;
+import de.eva.rmi.server.ChatServer;
+import de.eva.rmi.server.ChatServerService;
 
 public class ChatClient extends UnicastRemoteObject implements ChatClientService {
 
@@ -21,17 +26,13 @@ public class ChatClient extends UnicastRemoteObject implements ChatClientService
 	}
 
 	@Override
-	public void receive(Command c) {
-		if (c instanceof ContentCommand) {
-			System.out.println(((ContentCommand) c).getContent());
-		} else {
-			System.out.println("got command " + c);
-		}
+	public synchronized void receive(Message m) {
+		System.out.println(String.format("[%s] %s", m.getFrom(), m.getContent()));
 	}
 
 	public static void main(String[] args) throws MalformedURLException, RemoteException, NotBoundException, UserAlreadyRegisteredException {
 		System.out.println("Try to connect to server...");
-		ChatService service = (ChatService) Naming.lookup(ChatServer.CHAT_SERVER);
+		ChatServerService service = (ChatServerService) Naming.lookup(ChatServer.CHAT_SERVER);
 		
 		System.out.println("Please insert your user name...");
 		ChatClient self = new ChatClient();
